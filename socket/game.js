@@ -8,10 +8,15 @@ import {MAXIMUM_USERS_FOR_ONE_ROOM,
 var rooms = [];
 var usersInRoomMap = new Map(rooms.map(roomId => [roomId, {}]));
 const getCurrentRoomId = socket => Object.keys(socket.rooms).find(roomId => usersInRoomMap.has(roomId));
+var startedRooms = new Map()
 export default io => {
-  io.on("connection", socket => {    
-    var timerStarted = false
-    let activeRoomNow 
+  io.on("connection", socket => {  
+    var timerStarted = false;
+    var gameStarted = false;
+    let activeRoomNow;
+    let finishedOrder = 1;
+    var finishedUsers = [];
+    let resultWasShowed = false;
     socket.emit("UPDATE_ROOMS", rooms, Object.fromEntries(usersInRoomMap));
     var username = socket.handshake.query.username;
     var usernameIndex = users.indexOf(username)
@@ -31,16 +36,16 @@ export default io => {
         io.to(activeRoomNow).emit("SHOW_USER", allConnectedUsers, roomObject);
         io.emit("UPDATE_ROOMS", rooms, Object.fromEntries(usersInRoomMap));
         io.to(socket.id).emit("CHANGE_COUNTER_VALUE", "");
-        if (!timerStarted) {
+        if (!startedRooms.get(activeRoomNow)) {
           timerBeforeStart()
         }
-
       });
     }
     let deleteEmptyRooms = (roomObject) => {
       let usersArr = Object.keys(roomObject)
       if (usersArr.length == 0) {
         delete usersInRoomMap[activeRoomNow]
+
         let roonId = rooms.indexOf(activeRoomNow)
         rooms.splice(roonId, 1)
       }
@@ -108,14 +113,28 @@ export default io => {
         arrToShow.push(element[0])
         allProgresses.push(element[1])
       });
-      // if (allProgresses.every(elem => elem ==100) || !timerStarted){
-      //   return arrToShow
-      // }
-      return allConnectedUsers
+      return arrToShow
     }
-
+    let checkBeforeShow = () => {
+      // console.log("resultWasShowed ", resultWasShowed)
+      if (gameStarted && !resultWasShowed) {
+        let sortedArr = showResults();
+        let sortedArrCopy = [...sortedArr]
+        sortedArrCopy.forEach(sortedUser => {
+          finishedUsers.forEach(finished => {
+            if (finished == sortedUser){
+              let index = sortedArr.indexOf(sortedUser)
+              sortedArr.splice(index, 1)
+            }
+          });
+        });
+        finishedUsers.push(...sortedArr)
+        io.to(activeRoomNow).emit("SHOW_RESULTS", finishedUsers)
+      }
+    }
     let gameTimer = () => {
       let counter = SECONDS_FOR_GAME;
+      gameStarted = true;
         const interval = setInterval(() => {
           if (counter > 0){
             io.to(activeRoomNow).emit("RIGHT_TIMER_VALUE", `${counter} seconds left`);
@@ -125,9 +144,8 @@ export default io => {
             clearInterval(interval);
             io.to(activeRoomNow).emit("RIGHT_TIMER_VALUE", 'Time is over');
             io.to(activeRoomNow).emit("REMOVE_LISTENER");
-            timerStarted = false
-            let arrToShow = showResults()
-            io.to(activeRoomNow).emit("SHOW_RESULTS", arrToShow)
+            checkBeforeShow();
+            gameStarted = false;
           }
         }, 1000);
     }
@@ -142,7 +160,9 @@ export default io => {
       });
       if (allStatuses.indexOf(false) == -1 && allStatuses.length){
         io.emit("HIDE_ROOM", activeRoomNow)
-        timerStarted = true
+        startedRooms.set(activeRoomNow, true)
+        // timerStarted = true
+
         io.emit("HIDE_BUTTONS");
         let counter = seconds;
         const interval = setInterval(() => {
@@ -180,9 +200,8 @@ export default io => {
         }
       }
       io.to(activeRoomNow).emit("SHOW_USER", allConnectedUsers, roomObject);
-      
       io.to(activeRoomNow).emit("CHANGE_COLOR", username, color)
-      if (!timerStarted) {
+      if (!startedRooms.get(activeRoomNow)) {
         timerBeforeStart()
       }
     })
@@ -193,13 +212,25 @@ export default io => {
       let users = Object.keys(roomObject)
       let value = 100*(done-1)/all
       userObj.progress = value
-      io.to(activeRoomNow).emit("UPDATE_PROGRESS", value, username)
-      let finished = []
+      let progressesArr = [];
+      io.to(activeRoomNow).emit("UPDATE_PROGRESS", value, username);
       if (value == 100){
+        userObj.finished = finishedOrder
+        finishedOrder++
         io.to(socket.id).emit("REMOVE_LISTENER");
-        finished.push(username)
       }
-      console.log(showResults())
+      users.forEach(user => {
+        let obj = roomObject[user]
+        if (obj.progress == 100 && finishedUsers.indexOf(user) == -1){
+          finishedUsers.push(user)
+        }
+        progressesArr.push(obj.progress)
+      });
+      if (progressesArr.every(el => el == 100)){
+        resultWasShowed = true;
+        setTimeout( () => {io.to(activeRoomNow).emit("SHOW_RESULTS", finishedUsers)}, 100);
+      }
+      console.log("resultWasShowed ", resultWasShowed)
     });
 
     socket.on("disconnect", () => {
