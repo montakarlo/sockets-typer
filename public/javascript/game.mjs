@@ -56,6 +56,7 @@ const riseAlert = () => {
 const joinRoomDone = ({ roomId }) => {
   addClass(hideRooms, "display-none");
   removeClass(gamePage, "display-none");
+
 };
 
 backToRoomsButton.addEventListener("click", () =>{
@@ -156,21 +157,24 @@ let showText = async () => {
   });
   let idToColor = 0;
   document.addEventListener('keydown', listenerCall(idToColor, textSymbolsArr));
+  
 }
-function listenerCall (idToColor, textSymbolsArr){
-  return function keyPressFunction(event) {
-    if (event.key == textSymbolsArr[idToColor]){
+let pressHandler
+function listenerCall(idToColor, textSymbolsArr) {
+  pressHandler =  function keyPressFunction(event) {
+    if (event.key == textSymbolsArr[idToColor]) {
       addClass(document.getElementById(`symbol_${idToColor}`), "greenLetter")
-      if (textSymbolsArr.length - idToColor > 1){
+      if (textSymbolsArr.length - idToColor > 1) {
         removeClass(document.getElementById(`symbol_${idToColor}`), "underlined")
-        addClass(document.getElementById(`symbol_${idToColor+1}`), "underlined")
+        addClass(document.getElementById(`symbol_${idToColor + 1}`), "underlined")
       } else {
         removeClass(document.getElementById(`symbol_${idToColor}`), "underlined")
       }
       idToColor++
-      socket.emit("UPDATE_PROGRESS", idToColor+1, textSymbolsArr.length)
+      socket.emit("UPDATE_PROGRESS", idToColor + 1, textSymbolsArr.length)
     }
   }
+  return pressHandler
 }
 let updateProgress = (value, user) => {
   if (value == 100){
@@ -180,28 +184,51 @@ let updateProgress = (value, user) => {
 }
 
 let removeListener = () => {
-  document.removeEventListener('keydown', listenerCall());
+  document.removeEventListener('keydown', pressHandler);
+  console.log("remove");
 }
+
 let roomIsFool = () => {
   alert("Room is full. Choose another one or try again later");
 }
-let timerStarted = (room) => {
+let hideRoom = (room) => {
   timerStartedVar = true
+  let roomToHode = document.getElementById(`RoomItem${room}`)
+  addClass(roomToHode, "display-none")
+}
+
+let disconnect = () => {
+  const hideRooms = document.getElementById("rooms-page");
+  removeClass(hideRooms, "display-none");
+  const gamePage = document.getElementById("game-page");
+  addClass(gamePage, "display-none");
+  // socket.emit("BACK_TO_ROOMS");
+  addClass(notReadyButton, "display-none");
+  removeClass(readyButton, "display-none")
+}
+let showResults = (arrToShow) => {
+  let str = ""
+  let counter = 1
+  arrToShow.forEach(element => {
+    str += `${counter}. `+element + '\n'
+    counter++
+  });
+  alert(str)
 }
 
 socket.on("UPDATE_ROOMS", updateRooms);
 socket.on("ALERT", riseAlert);
 socket.on("JOIN_ROOM_DONE", joinRoomDone);
 socket.on("SHOW_USER", showUser);
-// socket.on("SHOW_YOU", showYou)
 socket.on("ALERT_ANOTER_ROOM", alertAnotherRoom);
-socket.on("CHANGE_COLOR", changeColor)
-socket.on("HIDE_BUTTONS", hideButtons)
-socket.on("CHANGE_COUNTER_VALUE", changeCounterValue)
-socket.on("SHOW_TEXT", showText)
-socket.on("UPDATE_PROGRESS", updateProgress)
-socket.on("RIGHT_TIMER_VALUE", rightTimerValue)
-socket.on("REMOVE_LISTENER", removeListener)
-socket.on("ROOM_IS_FULL", roomIsFool)
-socket.on("TIMER_STARTED", timerStarted)
-
+socket.on("CHANGE_COLOR", changeColor);
+socket.on("HIDE_BUTTONS", hideButtons);
+socket.on("CHANGE_COUNTER_VALUE", changeCounterValue);
+socket.on("SHOW_TEXT", showText);
+socket.on("UPDATE_PROGRESS", updateProgress);
+socket.on("RIGHT_TIMER_VALUE", rightTimerValue);
+socket.on("REMOVE_LISTENER", removeListener);
+socket.on("ROOM_IS_FULL", roomIsFool);
+socket.on("HIDE_ROOM", hideRoom);
+socket.on("DISCONNECT", disconnect);
+socket.on("SHOW_RESULTS", showResults);
