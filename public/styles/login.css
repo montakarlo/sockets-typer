@@ -8,11 +8,11 @@
 }
 
 #submit-button {
-  height: 39px;
-  font-size: 14px;
-  border: 1px solid var(--main-button-border-color);
+  height: 4rem;
+  font-size: 1.4rem;
+  border: 0.1rem solid var(--main-button-border-color);
   background-color: var(--main-button-background-color);
   text-transform: uppercase;
-  padding: 0 15px;
-  margin-left: 10px;
+  padding: 0 1.5rem;
+  margin-left: 1rem;
 }

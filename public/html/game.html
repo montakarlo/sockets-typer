@@ -6,23 +6,70 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/styles/reset.css">
   <link rel="stylesheet" href="/styles/common.css">
+  <link rel="stylesheet" href="/styles/rooms.css">
+  <link rel="stylesheet" href="/styles/game.css">
+
   <link
     href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300;1,400;1,600;1,700;1,800&display=swap"
     rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
   <script defer type="module" src="/javascript/game.mjs"></script>
+
   <title>Game</title>
 </head>
 
 <body>
   <div id="root">
     <div id="rooms-page" class="full-screen">
-      Rooms Page
+      <div class="rooms-pageContainer">
+        <p class="header">Join room or create new</p>
+        <button id="createRoomButton" class="clickButton">Create room</button>
+        <div id="roomsContainer" class="roomsContainer">
+
+          <!-- <div class="roomItem">
+            <div class="roomItem__container">
+              <p class="romItem__connected">1 user connected</p>
+            </div>
+            <p class="romItem__name">Room Name #1</p>
+            <button id="joinButton" class="clickButton">Join</button>
+          </div> -->
+
+
+
+
+        </div>
+      </div>
     </div>
     <div id="game-page" class="full-screen display-none">
-      Game Page
+      <div class="game-pageContainer">
+        <div class="leftSide">
+          <p class="roomName">Room Name</p>
+          <div class="backButtonContainer">
+            <button id="backToRoomsButton" class="clickButton">Back to rooms</button>
+          </div>
+          <div id="usersInRoom">
+            <!-- <div id="statusContainer" class="statusContainer">
+              <div class="circle"></div>
+              <p class="name">Dima</p>
+            </div>
+            <div class="progressContainer">
+              <div class="progress"></div>
+            </div> -->
+          </div>
+        </div>
+        <div class="rightSide">
+          <div class="rightTimerContainer">
+            <p id="rightTimerElement"></p>
+          </div>
+          <div class="textContainer">
+            <button id="readyButton" class="clickBigButton">READY</button>
+            <button id="notReadyButton" class="clickBigButton display-none">NOT READY</button>
+            <p id="counter"></p>
+            <div id="text" class="display-none"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </body>
-
 </html>

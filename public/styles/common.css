@@ -2,11 +2,15 @@
   font-family: "Open Sans", sans-serif;
   line-height: normal;
   color: var(--main-font-color);
+  font-size: 10px;
 }
 
 .full-screen {
   height: 100vh;
   width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .flex-centered {
