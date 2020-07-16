@@ -55,7 +55,7 @@ export default io => {
       let conUsers = Object.keys(usersInRoomMap.get(roomId))
         
       socket.join(roomId, () => {
-        io.to(socket.id).emit("JOIN_ROOM_DONE", { roomId });
+        io.to(socket.id).emit("JOIN_ROOM_DONE", roomId);
         let roomObject = usersInRoomMap.get(roomId)
         roomObject[username] = {"ready": false, "socketId": socket.id, "progress": 0}
         let usersInRoom = Object.keys(roomObject);
@@ -115,8 +115,9 @@ export default io => {
       });
       return arrToShow
     }
+
     let checkBeforeShow = () => {
-      // console.log("resultWasShowed ", resultWasShowed)
+      console.log(gameStarted, resultWasShowed);
       if (gameStarted && !resultWasShowed) {
         let sortedArr = showResults();
         let sortedArrCopy = [...sortedArr]
@@ -129,7 +130,15 @@ export default io => {
           });
         });
         finishedUsers.push(...sortedArr)
+        resultWasShowed = true
         io.to(activeRoomNow).emit("SHOW_RESULTS", finishedUsers)
+        io.to(activeRoomNow).emit("DELETE_TIMER")
+        io.to(activeRoomNow).emit("SHOW_EVTH_AGAIN")
+        io.to(socket.id).emit("JOIN_ROOM_DONE", activeRoomNow);
+        let roomObject = usersInRoomMap.get(activeRoomNow)
+        let usersInRoom = Object.keys(roomObject);
+        io.to(activeRoomNow).emit("SHOW_USER", usersInRoom, roomObject);
+
       }
     }
     let gameTimer = () => {
@@ -138,6 +147,7 @@ export default io => {
         const interval = setInterval(() => {
           if (counter > 0){
             io.to(activeRoomNow).emit("RIGHT_TIMER_VALUE", `${counter} seconds left`);
+      
           }
           counter--;
           if (counter < 0 ) {
@@ -173,6 +183,7 @@ export default io => {
           if (counter < 0 ) {
             clearInterval(interval);
             io.to(activeRoomNow).emit("CHANGE_COUNTER_VALUE", "");
+            gameStarted = true
             gameTimer();
             io.to(activeRoomNow).emit("SHOW_TEXT");
             // timerStarted = false
@@ -228,11 +239,10 @@ export default io => {
       });
       if (progressesArr.every(el => el == 100)){
         resultWasShowed = true;
-        setTimeout( () => {io.to(activeRoomNow).emit("SHOW_RESULTS", finishedUsers)}, 100);
+        // setTimeout( () => {io.to(activeRoomNow).emit("SHOW_RESULTS", finishedUsers)}, 100);
+        checkBeforeShow();
       }
-      console.log("resultWasShowed ", resultWasShowed)
     });
-
     socket.on("disconnect", () => {
       // console.log(`${socket.id} disconnected`);
       users.splice(usernameIndex,1)

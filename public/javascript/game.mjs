@@ -9,8 +9,9 @@ const readyButton = document.getElementById("readyButton");
 const notReadyButton = document.getElementById("notReadyButton");
 const createRoomButton = document.getElementById("createRoomButton");
 const text = document.getElementById("text");
-let counter = document.getElementById("counter")
-let rightTimer = document.getElementById("rightTimerElement")
+let counter = document.getElementById("counter");
+let rightTimer = document.getElementById("rightTimerElement");
+let roomName = document.getElementById("roomName");
 let timerStartedVar = false;
 const username = sessionStorage.getItem("username");
 if (!username) {
@@ -53,10 +54,10 @@ const riseAlert = () => {
   window.location.replace("/login");
 }
 
-const joinRoomDone = ({ roomId }) => {
+const joinRoomDone = (roomId ) => {
   addClass(hideRooms, "display-none");
   removeClass(gamePage, "display-none");
-
+  roomName.innerHTML = `${roomId}`
 };
 
 backToRoomsButton.addEventListener("click", () =>{
@@ -215,6 +216,16 @@ let showResults = (arrToShow) => {
   });
   alert(str)
 }
+let deleteTimer = () => {
+  let timer = document.getElementById("rightTimerElement");
+  addClass(timer, "display-none");
+}
+let showEvthAgain = () => {
+  removeClass(notReadyButton, "display-none")
+  removeClass(backToRoomsButton, "display-none")
+  text.innerHTML = ""
+  addClass(text, "display-none")
+}
 
 socket.on("UPDATE_ROOMS", updateRooms);
 socket.on("ALERT", riseAlert);
@@ -232,3 +243,6 @@ socket.on("ROOM_IS_FULL", roomIsFool);
 socket.on("HIDE_ROOM", hideRoom);
 socket.on("DISCONNECT", disconnect);
 socket.on("SHOW_RESULTS", showResults);
+socket.on("DELETE_TIMER", deleteTimer);
+socket.on("SHOW_EVTH_AGAIN", showEvthAgain);
+
